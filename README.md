@@ -6,8 +6,6 @@
 
 This project is a Redis-compatible server written in Java that uses the RESP2 protocol. It's built from scratch to understand how Redis works under the hood. My goal is to learn by building. I started with the basics of handling TCP connections and simple commands, and have been gradually adding more advanced features.<br>
 
-> **Note:** This project is being actively developed in a private workspace. Updates will be periodically pushed here until the repository reaches a “final” version that I am happy with.
-
 ---
 
 ## Current Functionality
