@@ -2,10 +2,11 @@ package dev.masonak.redis.core.value;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public final class ListValue implements Value {
 
-    private Deque<byte[]> deque = new ArrayDeque<>();
+    private Deque<byte[]> deque = new ConcurrentLinkedDeque<>();
 
     @Override
     public ValueType type() {
@@ -25,7 +26,12 @@ public final class ListValue implements Value {
         deque.addLast(input.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String pollFirst() { return new String(deque.pollFirst(), StandardCharsets.UTF_8); }
+    public String pollFirst() {
+        byte[] bytes = deque.pollFirst();
+        if (bytes == null)
+            return "";
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
 
     public Integer size() {
         return deque.size();
@@ -48,9 +54,11 @@ public final class ListValue implements Value {
         for (int i = 0; i < start; i++) {
             result.pollFirst();
         }
-        Deque<byte[]> temp = new ArrayDeque<>();
+        Deque<byte[]> temp = new ConcurrentLinkedDeque<>();
         for (int i = start; i <= stop; i++) {
-            temp.addLast(result.getDeque().pollFirst());
+            byte[] val = result.getDeque().pollFirst();
+            if (val != null)
+                temp.addLast(val);
         }
         result.setDeque(temp);
         return result;
@@ -65,7 +73,7 @@ public final class ListValue implements Value {
     }
 
     private Deque<byte[]> cloneDeque() {
-        Deque<byte[]> result = new ArrayDeque<>();
+        Deque<byte[]> result = new ConcurrentLinkedDeque<>();
         Iterator<byte[]> itr = deque.iterator();
         while (itr.hasNext()) {
             result.addLast(itr.next());
