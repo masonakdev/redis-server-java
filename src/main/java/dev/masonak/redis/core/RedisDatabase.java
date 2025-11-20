@@ -1,7 +1,6 @@
 package dev.masonak.redis.core;
 
 import dev.masonak.redis.concurrency.Waiter;
-import dev.masonak.redis.core.key.ByteKey;
 import dev.masonak.redis.core.key.Entry;
 import dev.masonak.redis.core.value.ValueType;
 import dev.masonak.redis.core.value.Value;
@@ -15,7 +14,7 @@ public class RedisDatabase {
 
     private static final long NO_EXPIRY = Long.MIN_VALUE;
 
-    private final Map<ByteKey, Entry> database = new ConcurrentHashMap<>();
+    private final Map<String, Entry> database = new ConcurrentHashMap<>();
     public final Map<String, ConcurrentLinkedQueue<Waiter>> blockedListKeys = new ConcurrentHashMap<>();
 
     /***
@@ -28,7 +27,7 @@ public class RedisDatabase {
     public void put(String key, Value value, Long ttlMillis) {
         long expireAt = (ttlMillis == null) ? NO_EXPIRY
                 : System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.max(0L, ttlMillis));
-        database.put(ByteKey.fromUtf8(key), new Entry(value, expireAt));
+        database.put(key, new Entry(value, expireAt));
         checkBlockedListKey(key);
     }
 
@@ -45,32 +44,30 @@ public class RedisDatabase {
     }
 
     public Value get(String key) {
-        ByteKey k = ByteKey.fromUtf8(key);
-        Entry e = database.get(k);
+        Entry e = database.get(key);
         if (e == null)
             return null;
         long now = System.nanoTime();
         if (e.isExpired(now)) {
-            database.remove(k, e);
+            database.remove(key, e);
             return null;
         }
         return e.value;
     }
 
     public boolean containsKey(String key) {
-        ByteKey k = ByteKey.fromUtf8(key);
-        Entry e = database.get(k);
+        Entry e = database.get(key);
         if (e == null)
             return false;
         long now = System.nanoTime();
         if (e.isExpired(now)) {
-            database.remove(k, e);
+            database.remove(key, e);
         }
         return true;
     }
 
     public boolean del(String key) {
-        return database.remove(ByteKey.fromUtf8(key)) != null;
+        return database.remove(key) != null;
     }
 
     public void blockListKey(String key, Waiter waiter) {
