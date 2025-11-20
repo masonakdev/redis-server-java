@@ -43,7 +43,10 @@ public class RedisServer {
     private static RedisDatabase db = new RedisDatabase();
 
     private static void handleClient(Socket clientSocket) {
-        try (clientSocket; OutputStream outputStream = clientSocket.getOutputStream(); InputStream in = clientSocket.getInputStream(); RESPParser respParser = new RESPParser(in)) {
+        try (clientSocket;
+                OutputStream outputStream = clientSocket.getOutputStream();
+                InputStream in = clientSocket.getInputStream();
+                RESPParser respParser = new RESPParser(in)) {
 
             Dispatcher dispatcher = new Dispatcher(commandRegistry, db);
             while (true) {
