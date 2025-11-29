@@ -19,7 +19,7 @@ public class RedisServer {
 
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
-        int port = 6379;
+        int port = args.length > 0 ? Integer.parseInt(args[0]) : 6379;
 
         commandRegistry = new CommandRegistry();
         DefaultCommands.registerAll(commandRegistry);

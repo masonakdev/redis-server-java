@@ -10,8 +10,8 @@ public class RedisClient implements Closeable {
     private final InputStream in;
     private final OutputStream out;
 
-    public RedisClient() throws IOException {
-        this.socket = new Socket("127.0.0.1", 6379);
+    public RedisClient(int port) throws IOException {
+        this.socket = new Socket("127.0.0.1", port);
         this.in = socket.getInputStream();
         this.out = socket.getOutputStream();
     }
