@@ -12,7 +12,7 @@ public class PingCommandTest extends BaseRedisTest {
 
     @Test
     void testPingCommand() throws Exception {
-        try (RedisClient client = new RedisClient()) {
+        try (RedisClient client = new RedisClient(port)) {
             String response = client.sendCommand("PING");
             assertEquals(RESPEncoder.encode(new SimpleString("PONG")), response);
         }

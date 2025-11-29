@@ -7,21 +7,31 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class RedisTestServer implements AutoCloseable {
 
-    private final Process process;
+    private final Process scriptProcess;
+    private final Process cmdProcess;
 
-    public RedisTestServer(String scriptPath) throws Exception {
-        ProcessBuilder pb = new ProcessBuilder(scriptPath);
-        pb.redirectErrorStream(true);
-        pb.directory(new File("."));
-        process = pb.start();
+    public RedisTestServer(String scriptPath, int port) throws Exception {
+        ProcessBuilder scriptProcessBuilder = new ProcessBuilder(scriptPath);
+        scriptProcessBuilder.redirectErrorStream(true);
+        scriptProcessBuilder.directory(new File("."));
+        scriptProcess = scriptProcessBuilder.start();
+
+        String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+        String classpath = System.getProperty("java.class.path");
+        String className = "dev.masonak.redis.RedisServer";
+
+        String[] cmdArgs = new String[] { javaBin, "-cp", classpath, className, Integer.toString(port) };
+        System.out.println(Logging.DEBUG_PREFIX + "Executing: " + Arrays.toString(cmdArgs));
+        cmdProcess = new ProcessBuilder(cmdArgs).start();
 
         new Thread(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(cmdProcess.getInputStream()))) {
                 String line;
-                while((line = reader.readLine()) != null) {
+                while ((line = reader.readLine()) != null) {
                     System.out.println(Logging.PREFIX + line);
                 }
             } catch (IOException e) {
@@ -29,7 +39,7 @@ public class RedisTestServer implements AutoCloseable {
             }
         }).start();
 
-        waitForServerReady(6379, 20000);
+        waitForServerReady(port, 20000);
     }
 
     private static void waitForServerReady(int port, int timeoutMs) throws Exception {
@@ -46,7 +56,8 @@ public class RedisTestServer implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        if (process != null && process.isAlive()) process.destroy();
+        if (cmdProcess != null && cmdProcess.isAlive())
+            cmdProcess.destroy();
     }
 
 }
