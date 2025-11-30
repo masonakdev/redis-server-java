@@ -30,8 +30,21 @@ public class XRangeCommand implements Command {
     public RESPValue execute(RedisDatabase db, List<String> args, CommandContext context) {
         if (args.size() == 3) {
             String streamKey = args.getFirst();
-            String floorId = args.get(1).equals("-") ? StreamIdUtil.sanitizeStreamID(streamKey, Long.toString(StreamIdDb.getStreamKeyMap(streamKey).firstEntry().getKey())) : StreamIdUtil.sanitizeStreamID(streamKey, args.get(1));
-            String ceilingId = args.get(2).equals("+") ? StreamIdUtil.sanitizeStreamID(streamKey, StreamIdDb.getStreamKeyMap(streamKey).lastEntry().getKey() + "-" + StreamIdDb.getStreamKeyMap(streamKey).lastEntry().getValue().getLast()) : StreamIdUtil.sanitizeStreamID(streamKey, args.get(2)); // yea this prob shouldn't be a one-liner lol
+            if (db.containsKey(streamKey) && db.get(streamKey).type() != ValueType.Stream) {
+                return new SimpleError("the specified key does not exist or is not associated with a stream");
+            }
+            if (!StreamIdDb.containsStreamKey(streamKey)) {
+                return new RArray();
+            }
+            String floorId = args.get(1).equals("-")
+                    ? StreamIdUtil.sanitizeStreamID(streamKey,
+                            Long.toString(StreamIdDb.getStreamKeyMap(streamKey).firstEntry().getKey()))
+                    : StreamIdUtil.sanitizeStreamID(streamKey, args.get(1));
+            String ceilingId = args.get(2).equals("+")
+                    ? StreamIdUtil.sanitizeStreamID(streamKey,
+                            StreamIdDb.getStreamKeyMap(streamKey).lastEntry().getKey() + "-"
+                                    + StreamIdDb.getStreamKeyMap(streamKey).lastEntry().getValue().getLast())
+                    : StreamIdUtil.sanitizeStreamID(streamKey, args.get(2));
             List<String> idsInRange = StreamIdUtil.getStreamIdsInRange(streamKey, floorId, ceilingId);
             RArray rArray = new RArray();
             for (String id : idsInRange) {
