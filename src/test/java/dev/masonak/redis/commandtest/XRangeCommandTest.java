@@ -42,7 +42,6 @@ public class XRangeCommandTest extends BaseRedisTest {
             assertTrue(response.contains("1000-1"));
             assertTrue(response.contains("1000-2"));
 
-            String[] parts = response.split("\r\n");
             boolean contains1001 = response.contains("1001-1");
             assertEquals(false, contains1001);
 
