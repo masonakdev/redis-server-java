@@ -18,7 +18,7 @@ public class LLenCommandTest extends BaseRedisTest {
             assertEquals(RESPEncoder.encode(SimpleError.wrongArity("LLEN")), response);
 
             response = client.sendCommand("LLEN", "key1", "key2");
-            assertEquals(RESPEncoder.encode(SimpleError.syntax("syntax is LLEN <list_key>")), response);
+            assertEquals(RESPEncoder.encode(SimpleError.wrongArity("LLEN")), response);
 
             response = client.sendCommand("LLEN", "nonexistent");
             assertEquals(RESPEncoder.encode(new RInteger(0)), response);
